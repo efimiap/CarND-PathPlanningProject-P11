@@ -1,6 +1,66 @@
 # CarND-PathPlanningProject-P11
 Create a path planner that is able to navigate a car safely around a virtual highway
 
+### Overview
+In this project, we implemented a path planning algorithm that successfully drives a vehicle on the highway. The car needs to:
+* Successfully change lanes in order to keep the maximum legal speed
+* Avoid collisions
+* Maintain a maximum speed for as long as possible
+* Utilise the sensor fusion information to detect vehicles on the highway and adapt depending on their position and speed on the lanes
+
+### Rubic Points
+
+#### Compilation
+The code compiles correctly
+```
+cd /CarND-Path-Planning-Project/build
+cmake .. && make
+```
+
+#### Valid Trajectories
+* The car is able to drive at least 4.32 miles without incident  
+The vehicle can successfully complete more than the miles suggested here
+![Driving](imgs/Drive.png)
+
+
+* The car drives according to the speed limit.  
+The car keeps a max 49.5mph speed and doesn't exceed that. It successfully drives on the simulation without any warning signs.
+
+* Max Acceleration and Jerk are not Exceeded.  
+As before no warning sign appeared. Max acc and jerk were not exceeded
+
+* Car does not have collisions.
+As before the car didn't have any collision during its route on the highway
+
+* The car stays in its lane, except for the time between changing lanes.  
+When the car finds a turn on the road it might get out of the middle line for a bit but after leaving the apex it is driving back to the middle line.
+
+* The car is able to change lanes.  
+It is able to change lanes depending on what it sees in front and on the sides
+
+#### Reflection
+There is a reflection on how to generate paths.  
+The Q&A video really helped a lot on getting this project going. After cloning the repo, I added the spline header file on `src/spline.h` and did all the changes on `src/main.cpp`, for ease.
+The code, as instructed, can be divided in three parts: prediction, behavior and trajectory.
+* Prediction (ln 108 - 155):
+Depending on the input from telemetry and sensor fusion, I update the flags `car_front, car_right, car_left` according to whether there is a car in front, on the right or left, respectively. Those flags are being used as lane identifiers.
+Input data format: `//sensor_fusion[id, x, y, vx, vy, s, d]` for the detected vehicles. I estimate the vehicle's s position in order to find the position it will be in the future. I check the s values greater than ours and the s-gap to make sure I have a gap of at least 30meters before changing lane. I update the flags depending on which lane the car is and the gap that I have.
+
+* Behavior (ln 157 - 179):
+Here we take action; we either change lane or adapt the speed in order to avoid collisions. The vehicle changes lane depending on the updated flags from the previous step. First, it checks whether a vehicle is in front of it and then it decides whether to change lane or to slow down.
+
+* Trajectory (ln 184 - 285):
+On this final step we perform trajectory generation based on the speed and the lane we have output from the previous steps and additionally based on the vehicle's position and previous waypoints generated. First, we create a list of waypoints, evenly spaced at 30meters. We use the previous path's endpoint as initial reference waypoint and redefine the reference state as previous path end point. Using Frenet cords we add 30 meters of evenly spaced points ahead of the starting reference points. The important bit here is that we calculate the trajectory based on the last two points of the already covered trajectory. If the vehicle hasn't covered those 60 meters, we use the current position as initial.  
+Then, we use splines as a method to generate the trajectory. We perform a shift and rotate transform. The computed waypoints are transformed using a spline taking into account acceleration and velocity. In total we generate 50 waypoints. 
+
+
+
+
+
+
+
+
+
 ### Simulator.
 You can download the Term3 Simulator which contains the Path Planning Project from the [releases tab (https://github.com/udacity/self-driving-car-sim/releases/tag/T3_v1.2).  
 
